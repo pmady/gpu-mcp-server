@@ -2,7 +2,7 @@
 
 An [MCP](https://modelcontextprotocol.io/) server that exposes NVIDIA GPU metrics as tools.
 Any MCP-compatible AI agent (Claude, Goose, Cursor, etc.) can query real-time GPU
-utilization, memory, temperature, power, PCIe and NVLink throughput — no Prometheus
+utilization, memory, temperature, power, PCIe and NVLink throughput no Prometheus
 or dcgm-exporter required.
 
 Built on the [official Go MCP SDK](https://github.com/modelcontextprotocol/go-sdk)
@@ -25,7 +25,7 @@ devices with their parent GPU's shared metrics (temperature, power, PCIe).
 # build (requires CGO + NVML headers on Linux)
 make build
 
-# run — the server communicates over stdio
+# run the server communicates over stdio
 ./gpu-mcp-server
 ```
 
@@ -58,12 +58,12 @@ Requires Go 1.23+, CGO, and NVIDIA drivers on the target machine.
 
 ```bash
 make build       # compile binary
-make test        # run tests (no GPU needed — uses mock)
+make test        # run tests (no GPU needed uses mock)
 make lint        # golangci-lint
 make docker      # container image
 ```
 
-Tests use a mock collector, so they run anywhere — no GPU hardware required.
+Tests use a mock collector, so they run anywhere no GPU hardware required.
 
 ## Architecture
 
