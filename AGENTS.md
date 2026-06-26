@@ -32,7 +32,7 @@ server/server_test.go         tests
 - **Collector interface** in `gpu/gpu.go` abstracts hardware access
 - **Build tags**: `gpu/nvml.go` uses `//go:build cgo && linux`, `gpu/stub.go` covers everything else
 - **Tool handlers** are methods on `server.Handler`, registered via `mcp.AddTool`
-- Tests call handler methods directly with a `gpu.Mock` — no MCP transport needed
+- Tests call handler methods directly with a `gpu.Mock` no MCP transport needed
 
 ## Testing
 
@@ -52,12 +52,12 @@ make test
 ## Dependencies
 
 Only two external dependencies:
-- `github.com/modelcontextprotocol/go-sdk` — MCP protocol
-- `github.com/NVIDIA/go-nvml` — NVML bindings
+- `github.com/modelcontextprotocol/go-sdk` MCP protocol
+- `github.com/NVIDIA/go-nvml` NVML bindings
 
 ## Rules
 
 - Do not add dependencies without maintainer approval
-- Keep comments terse — match existing style
+- Keep comments terse match existing style
 - All PRs need tests
 - Sign off commits (DCO)

@@ -2,7 +2,7 @@
 
 | Dependency | License | Purpose |
 |------------|---------|---------|
-| [github.com/modelcontextprotocol/go-sdk](https://github.com/modelcontextprotocol/go-sdk) | MIT | Official MCP Go SDK — server, tools, transport |
+| [github.com/modelcontextprotocol/go-sdk](https://github.com/modelcontextprotocol/go-sdk) | MIT | Official MCP Go SDK server, tools, transport |
 | [github.com/NVIDIA/go-nvml](https://github.com/NVIDIA/go-nvml) | Apache 2.0 | Go bindings for the NVIDIA Management Library (NVML) |
 
 ## Standard Library

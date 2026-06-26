@@ -16,14 +16,14 @@ Public roadmap for gpu-mcp-server. Updated quarterly.
 ## Q4 2026
 
 - [ ] Streamable HTTP transport (run as a network service)
-- [ ] MCP resources — expose GPU info as context for agents
+- [ ] MCP resources expose GPU info as context for agents
 - [ ] Per-process GPU usage (PID-level memory and compute attribution)
 - [ ] Prometheus metrics endpoint (optional, alongside MCP)
 - [ ] Integration tests with Claude Desktop and Goose
 
 ## Q1 2027
 
-- [ ] Multi-node support — aggregate metrics from remote hosts
+- [ ] Multi-node support aggregate metrics from remote hosts
 - [ ] GPU event notifications (thermal throttling, ECC errors, XID events)
 - [ ] OpenSSF Best Practices badge
 - [ ] Helm chart for Kubernetes deployment
@@ -32,7 +32,7 @@ Public roadmap for gpu-mcp-server. Updated quarterly.
 
 - [ ] AMD ROCm support (via rocm-smi)
 - [ ] Intel GPU support (via oneAPI Level Zero)
-- [ ] MCP sampling integration — let agents request GPU snapshots at intervals
+- [ ] MCP sampling integration - let agents request GPU snapshots at intervals
 - [ ] AAIF project proposal submission (Growth stage)
 
 ## How to Contribute

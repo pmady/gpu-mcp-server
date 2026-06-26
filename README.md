@@ -16,7 +16,7 @@ and [NVIDIA go-nvml](https://github.com/NVIDIA/go-nvml).
 | `get_gpu_metrics` | Detailed metrics for a GPU by index or UUID |
 | `gpu_summary` | Aggregate stats across all devices |
 
-All tools support MIG (Multi-Instance GPU) — MIG instances appear as separate
+All tools support MIG (Multi-Instance GPU) - MIG instances appear as separate
 devices with their parent GPU's shared metrics (temperature, power, PCIe).
 
 ## Quick start
@@ -100,9 +100,9 @@ This project follows [Linux Foundation Minimum Viable Governance](GOVERNANCE.md)
 
 ## Documentation
 
-- [ROADMAP.md](ROADMAP.md) — public roadmap
-- [GOVERNANCE.md](GOVERNANCE.md) — decision-making process
-- [DEPENDENCIES.md](DEPENDENCIES.md) — external dependencies and licenses
-- [SECURITY.md](SECURITY.md) — vulnerability reporting
-- [AGENTS.md](AGENTS.md) — instructions for AI agents working on this repo
-- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — community standards
+- [ROADMAP.md](ROADMAP.md) - public roadmap
+- [GOVERNANCE.md](GOVERNANCE.md) - decision-making process
+- [DEPENDENCIES.md](DEPENDENCIES.md) - external dependencies and licenses
+- [SECURITY.md](SECURITY.md) - vulnerability reporting
+- [AGENTS.md](AGENTS.md) - instructions for AI agents working on this repo
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - community standards
