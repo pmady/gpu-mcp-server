@@ -1,0 +1,66 @@
+name: Helm
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deploy/helm/**"
+      - ".github/workflows/helm.yaml"
+  pull_request:
+    paths:
+      - "deploy/helm/**"
+      - ".github/workflows/helm.yaml"
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: helm lint
+        run: helm lint deploy/helm/gpu-mcp-server
+
+      - name: helm template (render)
+        run: |
+          helm template gpu-mcp deploy/helm/gpu-mcp-server > /dev/null
+          helm template gpu-mcp deploy/helm/gpu-mcp-server --set transport=stdio > /dev/null
+          helm template gpu-mcp deploy/helm/gpu-mcp-server --set serviceMonitor.enabled=true > /dev/null
+
+      - name: Install helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --version v0.5.1
+
+      - name: helm unittest
+        run: helm unittest deploy/helm/gpu-mcp-server
+
+  publish:
+    # Package the chart and push it to GHCR as an OCI artifact on release.
+    needs: lint
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Package chart
+        run: helm package deploy/helm/gpu-mcp-server --destination dist
+
+      - name: Push chart to GHCR
+        run: helm push dist/gpu-mcp-server-*.tgz oci://ghcr.io/${{ github.repository_owner }}/charts

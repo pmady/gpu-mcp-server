@@ -1,0 +1,28 @@
+suite: service
+templates:
+  - templates/service.yaml
+tests:
+  - it: renders a ClusterIP Service in http mode
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: spec.ports[0].targetPort
+          value: http
+
+  - it: is not rendered in stdio mode
+    set:
+      transport: stdio
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: is not rendered when service.enabled is false
+    set:
+      service.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

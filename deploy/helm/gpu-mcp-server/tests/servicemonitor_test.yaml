@@ -1,0 +1,26 @@
+suite: servicemonitor
+templates:
+  - templates/servicemonitor.yaml
+tests:
+  - it: is not rendered by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a ServiceMonitor when enabled in http mode
+    set:
+      serviceMonitor.enabled: true
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: spec.endpoints[0].port
+          value: http
+
+  - it: fails when enabled with a non-http transport
+    set:
+      serviceMonitor.enabled: true
+      transport: stdio
+    asserts:
+      - failedTemplate:
+          errorMessage: "serviceMonitor.enabled requires transport: http"
