@@ -1,0 +1,31 @@
+gpu-mcp-server has been deployed as a DaemonSet on your GPU nodes.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Transport: {{ .Values.transport }}
+
+Check the rollout:
+
+  kubectl -n {{ .Release.Namespace }} rollout status ds/{{ include "gpu-mcp-server.fullname" . }}
+  kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }} -o wide
+
+{{- if eq .Values.transport "http" }}
+
+The server is reachable over HTTP on port {{ .Values.port }}.
+{{- if .Values.service.enabled }}
+
+Service: {{ include "gpu-mcp-server.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.port }}
+
+Port-forward and probe health locally:
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "gpu-mcp-server.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+  curl http://127.0.0.1:{{ .Values.service.port }}/healthz
+{{- end }}
+{{- else }}
+
+Running with the stdio transport (sidecar mode). Attach an MCP client to the
+container's stdio to use the GPU tools.
+{{- end }}
+
+If pods are Pending, confirm they tolerate your GPU node taints and that the
+nodeSelector/affinity in values.yaml matches your GPU node labels.

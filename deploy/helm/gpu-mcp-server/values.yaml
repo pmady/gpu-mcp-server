@@ -1,0 +1,103 @@
+# Default values for gpu-mcp-server.
+
+image:
+  repository: ghcr.io/pmady/gpu-mcp-server
+  # tag defaults to the chart appVersion when empty.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Transport the server runs on.
+#   http  - standalone DaemonSet reachable over the network (default here)
+#   stdio - for running as a sidecar next to an MCP client
+transport: http
+
+# Port for the http transport (ignored when transport=stdio).
+port: 8080
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+podAnnotations: {}
+podLabels: {}
+
+# updateStrategy for the DaemonSet.
+updateStrategy:
+  type: RollingUpdate
+
+priorityClassName: ""
+
+# Pin the DaemonSet to GPU nodes. Default selector matches nodes labelled by
+# the NVIDIA GPU Operator / device plugin. Override for your cluster.
+nodeSelector: {}
+  # nvidia.com/gpu.present: "true"
+
+affinity: {}
+
+# Tolerate the taint the NVIDIA device plugin places on GPU nodes so the
+# DaemonSet is scheduled there.
+tolerations:
+  - key: nvidia.com/gpu
+    operator: Exists
+    effect: NoSchedule
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+podSecurityContext: {}
+securityContext:
+  # NVML only needs read access to the driver; run unprivileged.
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# How the container reaches NVML / the NVIDIA driver.
+nvidia:
+  # Let the NVIDIA container runtime inject the driver libraries (recommended).
+  # Requires the NVIDIA container toolkit / runtime class on the node.
+  runtimeInjection: true
+  visibleDevices: "all"
+  # "utility" is enough for NVML metrics; no compute/graphics capability needed.
+  driverCapabilities: "utility"
+  # runtimeClassName to request when runtimeInjection is enabled (optional).
+  runtimeClassName: ""
+  # Alternatively (or additionally) mount the NVML library from the host.
+  hostMounts:
+    enabled: false
+    # Directory on the host holding libnvidia-ml.so.
+    libDir: /usr/lib/x86_64-linux-gnu
+
+# Liveness/readiness probes hit /healthz (http transport only).
+probes:
+  enabled: true
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+  annotations: {}
+
+# Optional Prometheus Operator ServiceMonitor. Requires the http transport and
+# a metrics endpoint (the /metrics path is reserved for a future release).
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  path: /metrics
+  labels: {}
+
+# Extra environment variables and CLI args passed to the container.
+extraEnv: []
+extraArgs: []

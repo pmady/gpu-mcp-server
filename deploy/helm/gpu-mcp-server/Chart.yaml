@@ -1,0 +1,18 @@
+apiVersion: v2
+name: gpu-mcp-server
+description: A Helm chart to run gpu-mcp-server as a DaemonSet on Kubernetes GPU nodes
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - gpu
+  - nvidia
+  - nvml
+  - mcp
+  - monitoring
+home: https://github.com/pmady/gpu-mcp-server
+sources:
+  - https://github.com/pmady/gpu-mcp-server
+maintainers:
+  - name: gpu-mcp-server authors
+    url: https://github.com/pmady/gpu-mcp-server
