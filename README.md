@@ -19,6 +19,64 @@ and [NVIDIA go-nvml](https://github.com/NVIDIA/go-nvml).
 All tools support MIG (Multi-Instance GPU) - MIG instances appear as separate
 devices with their parent GPU's shared metrics (temperature, power, PCIe).
 
+
+## Sample Output
+
+The following examples show representative JSON responses returned by each MCP tool. Actual values will vary depending on your hardware and workload.
+
+### `list_gpus`
+
+```json
+{
+  "count": 1,
+  "devices": [
+    {
+      "index": 0,
+      "uuid": "GPU-12345678-abcd-1234-efgh-123456789abc",
+      "name": "NVIDIA RTX 4090",
+      "gpu_utilization_percent": 42,
+      "memory_used_mib": 8192,
+      "memory_total_mib": 24576
+    }
+  ]
+}
+```
+
+### `get_gpu_metrics`
+
+```json
+{
+  "index": 0,
+  "uuid": "GPU-12345678-abcd-1234-efgh-123456789abc",
+  "name": "NVIDIA RTX 4090",
+  "gpu_utilization_percent": 42,
+  "memory_utilization_percent": 33,
+  "memory_used_mib": 8192,
+  "memory_total_mib": 24576,
+  "temperature_celsius": 63,
+  "power_draw_watts": 210,
+  "power_limit_watts": 450,
+  "pcie_tx_kbps": 12400,
+  "pcie_rx_kbps": 9800,
+  "nvlink_tx_mbps": 0,
+  "nvlink_rx_mbps": 0
+}
+```
+
+### `gpu_summary`
+
+```json
+{
+  "device_count": 1,
+  "avg_gpu_utilization": 42,
+  "avg_memory_utilization": 33,
+  "total_memory_used_mib": 8192,
+  "total_memory_total_mib": 24576,
+  "max_temperature_celsius": 63,
+  "total_power_draw_watts": 210
+}
+```
+
 ## Quick start
 
 ```bash
