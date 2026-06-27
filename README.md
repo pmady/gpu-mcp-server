@@ -1,5 +1,12 @@
 # gpu-mcp-server
 
+[![OpenSSF Best Practices](https://img.shields.io/badge/OpenSSF_Best_Practices-in_progress-yellow)](https://www.bestpractices.dev/en)
+
+> **Note:** the OpenSSF Best Practices questionnaire is in progress. Once the
+> project entry is registered at <https://www.bestpractices.dev/en>, swap the
+> static badge above for the live one:
+> `[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/<ID>/badge)](https://www.bestpractices.dev/projects/<ID>)`
+
 An [MCP](https://modelcontextprotocol.io/) server that exposes NVIDIA GPU metrics as tools.
 Any MCP-compatible AI agent (Claude, Goose, Cursor, etc.) can query real-time GPU
 utilization, memory, temperature, power, PCIe and NVLink throughput no Prometheus
