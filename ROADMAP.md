@@ -26,7 +26,7 @@ Public roadmap for gpu-mcp-server. Updated quarterly.
 - [ ] Multi-node support aggregate metrics from remote hosts
 - [ ] GPU event notifications (thermal throttling, ECC errors, XID events)
 - [ ] OpenSSF Best Practices badge
-- [ ] Helm chart for Kubernetes deployment
+- [x] Helm chart for Kubernetes deployment
 
 ## Q2 2027
 
