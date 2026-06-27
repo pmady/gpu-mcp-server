@@ -52,6 +52,36 @@ extensions:
     cmd: /path/to/gpu-mcp-server
 ```
 
+### Cursor
+
+Add to `.cursor/mcp.json` for a project, or `~/.cursor/mcp.json` for all
+projects:
+
+```json
+{
+  "mcpServers": {
+    "gpu": {
+      "type": "stdio",
+      "command": "/path/to/gpu-mcp-server"
+    }
+  }
+}
+```
+
+### Windsurf
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "gpu": {
+      "command": "/path/to/gpu-mcp-server"
+    }
+  }
+}
+```
+
 ## Build
 
 Requires Go 1.23+, CGO, and NVIDIA drivers on the target machine.
