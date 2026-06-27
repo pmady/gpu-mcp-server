@@ -1,5 +1,10 @@
 # gpu-mcp-server
 
+[![CI](https://github.com/pmady/gpu-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/pmady/gpu-mcp-server/actions/workflows/ci.yml)
+[![Helm](https://github.com/pmady/gpu-mcp-server/actions/workflows/helm.yaml/badge.svg)](https://github.com/pmady/gpu-mcp-server/actions/workflows/helm.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/pmady/gpu-mcp-server)](https://goreportcard.com/report/github.com/pmady/gpu-mcp-server)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 An [MCP](https://modelcontextprotocol.io/) server that exposes NVIDIA GPU metrics as tools.
 Any MCP-compatible AI agent (Claude, Goose, Cursor, etc.) can query real-time GPU
 utilization, memory, temperature, power, PCIe and NVLink throughput no Prometheus
@@ -14,6 +19,7 @@ and [NVIDIA go-nvml](https://github.com/NVIDIA/go-nvml).
 |------|-------------|
 | `list_gpus` | List all GPUs with utilization and memory info |
 | `get_gpu_metrics` | Detailed metrics for a GPU by index or UUID |
+| `get_gpu_processes` | PID-level GPU process attribution |
 | `gpu_summary` | Aggregate stats across all devices |
 
 All tools support MIG (Multi-Instance GPU) - MIG instances appear as separate
