@@ -50,8 +50,16 @@ var testDevices = []gpu.Metrics{
 	},
 }
 
+var testProcs = []gpu.ProcessInfo{
+	{PID: 12345, Name: "python", GPUIndex: 0, GPUUUID: "GPU-aaaa-1111", MemUsedMiB: 4096, Type: "compute"},
+	{PID: 67890, Name: "tritonserver", GPUIndex: 1, GPUUUID: "GPU-bbbb-2222", MemUsedMiB: 16384, Type: "compute"},
+	{PID: 222, Name: "Xorg", GPUIndex: 0, GPUUUID: "GPU-aaaa-1111", MemUsedMiB: 64, Type: "graphics"},
+}
+
 func newTestHandler() *Handler {
-	return New(gpu.NewMock(testDevices), "test")
+	m := gpu.NewMock(testDevices)
+	m.Procs = testProcs
+	return New(m, "test")
 }
 
 func TestListGPUs(t *testing.T) {
@@ -155,6 +163,59 @@ func TestGPUSummary(t *testing.T) {
 	wantMemUsed := uint64(57344 + 12288)
 	if out.TotalMemUsed != wantMemUsed {
 		t.Errorf("TotalMemUsed = %d, want %d", out.TotalMemUsed, wantMemUsed)
+	}
+}
+
+func TestGetProcesses_All(t *testing.T) {
+	h := newTestHandler()
+	_, out, err := h.getProcesses(context.Background(), nil, GetProcessesInput{})
+	if err != nil {
+		t.Fatalf("getProcesses: %v", err)
+	}
+	if out.Count != 3 {
+		t.Errorf("count = %d, want 3", out.Count)
+	}
+}
+
+func TestGetProcesses_FilterByIndex(t *testing.T) {
+	h := newTestHandler()
+	idx := 0
+	_, out, err := h.getProcesses(context.Background(), nil, GetProcessesInput{Index: &idx})
+	if err != nil {
+		t.Fatalf("getProcesses: %v", err)
+	}
+	if out.Count != 2 {
+		t.Errorf("count = %d, want 2 for index 0", out.Count)
+	}
+	for _, p := range out.Processes {
+		if p.GPUIndex != 0 {
+			t.Errorf("process %d has index %d, want 0", p.PID, p.GPUIndex)
+		}
+	}
+}
+
+func TestGetProcesses_FilterByUUID(t *testing.T) {
+	h := newTestHandler()
+	_, out, err := h.getProcesses(context.Background(), nil, GetProcessesInput{UUID: "GPU-bbbb-2222"})
+	if err != nil {
+		t.Fatalf("getProcesses: %v", err)
+	}
+	if out.Count != 1 {
+		t.Fatalf("count = %d, want 1", out.Count)
+	}
+	if out.Processes[0].PID != 67890 {
+		t.Errorf("PID = %d, want 67890", out.Processes[0].PID)
+	}
+}
+
+func TestGetProcesses_Empty(t *testing.T) {
+	h := New(gpu.NewMock(nil), "test")
+	_, out, err := h.getProcesses(context.Background(), nil, GetProcessesInput{})
+	if err != nil {
+		t.Fatalf("getProcesses: %v", err)
+	}
+	if out.Count != 0 {
+		t.Errorf("count = %d, want 0", out.Count)
 	}
 }
 

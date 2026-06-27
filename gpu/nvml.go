@@ -171,6 +171,62 @@ func (n *NVML) readDevice(index int) (Metrics, error) {
 	return m, nil
 }
 
+// Processes enumerates the compute and graphics processes running on every
+// GPU on the node. MIG instance IDs are reported through the parent device.
+func (n *NVML) Processes() ([]ProcessInfo, error) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
+	count, err := n.Count()
+	if err != nil {
+		return nil, err
+	}
+
+	var out []ProcessInfo
+	for i := 0; i < count; i++ {
+		dev, ret := nvml.DeviceGetHandleByIndex(i)
+		if ret != nvml.SUCCESS {
+			slog.Warn("skipping device", "index", i, "err", nvml.ErrorString(ret))
+			continue
+		}
+		uuid, ret := dev.GetUUID()
+		if ret != nvml.SUCCESS {
+			uuid = ""
+		}
+
+		if procs, ret := dev.GetComputeRunningProcesses(); ret == nvml.SUCCESS {
+			out = append(out, convertProcs(procs, i, uuid, "compute")...)
+		} else {
+			slog.Warn("compute processes failed", "gpu", i, "err", nvml.ErrorString(ret))
+		}
+		if procs, ret := dev.GetGraphicsRunningProcesses(); ret == nvml.SUCCESS {
+			out = append(out, convertProcs(procs, i, uuid, "graphics")...)
+		} else {
+			slog.Warn("graphics processes failed", "gpu", i, "err", nvml.ErrorString(ret))
+		}
+	}
+	return out, nil
+}
+
+func convertProcs(procs []nvml.ProcessInfo, index int, uuid, kind string) []ProcessInfo {
+	out := make([]ProcessInfo, 0, len(procs))
+	for _, p := range procs {
+		name, ret := nvml.SystemGetProcessName(int(p.Pid))
+		if ret != nvml.SUCCESS {
+			name = ""
+		}
+		out = append(out, ProcessInfo{
+			PID:        p.Pid,
+			Name:       name,
+			GPUIndex:   index,
+			GPUUUID:    uuid,
+			MemUsedMiB: p.UsedGpuMemory / (1024 * 1024),
+			Type:       kind,
+		})
+	}
+	return out
+}
+
 // --- MIG helpers ---
 
 func migEnabled(dev nvml.Device) bool {
