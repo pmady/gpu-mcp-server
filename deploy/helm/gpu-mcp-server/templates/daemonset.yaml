@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "gpu-mcp-server.fullname" . }}
+  labels:
+    {{- include "gpu-mcp-server.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "gpu-mcp-server.selectorLabels" . | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .Values.updateStrategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "gpu-mcp-server.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "gpu-mcp-server.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- if and .Values.nvidia.runtimeInjection .Values.nvidia.runtimeClassName }}
+      runtimeClassName: {{ .Values.nvidia.runtimeClassName }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: gpu-mcp-server
+          image: {{ include "gpu-mcp-server.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            {{- if eq .Values.transport "http" }}
+            - --transport
+            - http
+            - --port
+            - {{ .Values.port | quote }}
+            {{- else }}
+            - --transport
+            - stdio
+            {{- end }}
+            {{- with .Values.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          env:
+            {{- if .Values.nvidia.runtimeInjection }}
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: {{ .Values.nvidia.visibleDevices | quote }}
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: {{ .Values.nvidia.driverCapabilities | quote }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if eq .Values.transport "http" }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          {{- if .Values.probes.enabled }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.nvidia.hostMounts.enabled }}
+          volumeMounts:
+            - name: nvml-lib
+              mountPath: {{ .Values.nvidia.hostMounts.libDir }}
+              readOnly: true
+          {{- end }}
+      {{- if .Values.nvidia.hostMounts.enabled }}
+      volumes:
+        - name: nvml-lib
+          hostPath:
+            path: {{ .Values.nvidia.hostMounts.libDir }}
+            type: Directory
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
