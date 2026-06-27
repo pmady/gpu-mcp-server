@@ -35,6 +35,11 @@ type GetMetricsInput struct {
 
 type SummaryInput struct{}
 
+type GetProcessesInput struct {
+	Index *int   `json:"index,omitempty" jsonschema:"filter by GPU device index (0-based)"`
+	UUID  string `json:"uuid,omitempty" jsonschema:"filter by GPU or MIG instance UUID"`
+}
+
 // -- tool output types --
 
 type GPUListItem struct {
@@ -59,6 +64,11 @@ type SummaryOutput struct {
 	TotalMemTotal uint64  `json:"total_memory_total_mib" jsonschema:"aggregate device memory"`
 	MaxTempC      uint32  `json:"max_temperature_celsius" jsonschema:"hottest GPU temperature"`
 	TotalPowerW   uint32  `json:"total_power_draw_watts" jsonschema:"aggregate power consumption"`
+}
+
+type GetProcessesOutput struct {
+	Count     int               `json:"count" jsonschema:"number of GPU processes"`
+	Processes []gpu.ProcessInfo `json:"processes" jsonschema:"per-process GPU usage"`
 }
 
 // Handler wires GPU metrics into MCP tools.
@@ -91,6 +101,11 @@ func New(c gpu.Collector, version string) *Handler {
 		Name:        "gpu_summary",
 		Description: "Get aggregate GPU statistics across all devices on this node",
 	}, h.gpuSummary)
+
+	mcp.AddTool(h.srv, &mcp.Tool{
+		Name:        "get_gpu_processes",
+		Description: "List processes using GPU resources, optionally filtered by GPU index or UUID",
+	}, h.getProcesses)
 
 	return h
 }
@@ -134,6 +149,31 @@ func (h *Handler) getMetrics(ctx context.Context, req *mcp.CallToolRequest, inpu
 	default:
 		return nil, gpu.Metrics{}, fmt.Errorf("provide either 'index' or 'uuid'")
 	}
+}
+
+func (h *Handler) getProcesses(ctx context.Context, req *mcp.CallToolRequest, input GetProcessesInput) (*mcp.CallToolResult, GetProcessesOutput, error) {
+	procs, err := h.collector.Processes()
+	if err != nil {
+		return nil, GetProcessesOutput{}, fmt.Errorf("reading GPU processes: %w", err)
+	}
+
+	filtered := procs[:0:0]
+	for _, p := range procs {
+		switch {
+		case input.UUID != "":
+			if p.GPUUUID == input.UUID {
+				filtered = append(filtered, p)
+			}
+		case input.Index != nil:
+			if p.GPUIndex == *input.Index {
+				filtered = append(filtered, p)
+			}
+		default:
+			filtered = append(filtered, p)
+		}
+	}
+
+	return nil, GetProcessesOutput{Count: len(filtered), Processes: filtered}, nil
 }
 
 func (h *Handler) gpuSummary(ctx context.Context, req *mcp.CallToolRequest, input SummaryInput) (*mcp.CallToolResult, SummaryOutput, error) {

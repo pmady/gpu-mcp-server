@@ -39,6 +39,17 @@ type Metrics struct {
 	MIGProfile string `json:"mig_profile,omitempty"`
 }
 
+// ProcessInfo describes a single process using GPU resources.
+type ProcessInfo struct {
+	PID        uint32 `json:"pid"`
+	Name       string `json:"name"`
+	GPUIndex   int    `json:"gpu_index"`
+	GPUUUID    string `json:"gpu_uuid,omitempty"`
+	MemUsedMiB uint64 `json:"memory_used_mib"`
+	// Type is "compute" or "graphics".
+	Type string `json:"type"`
+}
+
 // Collector reads GPU metrics from the node.
 // Implementations must be safe for concurrent use.
 type Collector interface {
@@ -46,5 +57,7 @@ type Collector interface {
 	ByIndex(index int) (Metrics, error)
 	ByUUID(uuid string) (Metrics, error)
 	Count() (int, error)
+	// Processes returns the processes currently using each GPU on the node.
+	Processes() ([]ProcessInfo, error)
 	Close() error
 }
