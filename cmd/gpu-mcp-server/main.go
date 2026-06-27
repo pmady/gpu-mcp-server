@@ -18,6 +18,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -30,6 +32,10 @@ import (
 var version = "dev"
 
 func main() {
+	transport := flag.String("transport", "stdio", "transport to serve on: stdio or http")
+	port := flag.Int("port", 8080, "TCP port for the http transport")
+	flag.Parse()
+
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, nil)))
 
 	collector, err := gpu.NewNVML()
@@ -42,7 +48,18 @@ func main() {
 	defer stop()
 
 	srv := server.New(collector, version)
-	if err := srv.Run(ctx); err != nil {
-		log.Fatalf("server: %v", err)
+
+	switch *transport {
+	case "stdio":
+		if err := srv.Run(ctx); err != nil {
+			log.Fatalf("server: %v", err)
+		}
+	case "http":
+		addr := fmt.Sprintf(":%d", *port)
+		if err := srv.RunHTTP(ctx, addr); err != nil {
+			log.Fatalf("server: %v", err)
+		}
+	default:
+		log.Fatalf("unknown transport %q (want stdio or http)", *transport)
 	}
 }
