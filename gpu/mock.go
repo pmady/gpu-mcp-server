@@ -21,6 +21,7 @@ import "fmt"
 // Mock is a test double backed by a static device list.
 type Mock struct {
 	Devices []Metrics
+	Procs   []ProcessInfo
 }
 
 var _ Collector = (*Mock)(nil)
@@ -44,6 +45,8 @@ func (m *Mock) ByUUID(uuid string) (Metrics, error) {
 	}
 	return Metrics{}, fmt.Errorf("no device with UUID %q", uuid)
 }
+
+func (m *Mock) Processes() ([]ProcessInfo, error) { return m.Procs, nil }
 
 func (m *Mock) Count() (int, error) { return len(m.Devices), nil }
 func (m *Mock) Close() error        { return nil }

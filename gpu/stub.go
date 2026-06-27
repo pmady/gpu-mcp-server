@@ -28,8 +28,9 @@ func NewNVML() (*NVML, error) {
 
 type NVML struct{}
 
-func (n *NVML) All() ([]Metrics, error)                { return nil, errors.New("nvml unavailable") }
-func (n *NVML) ByIndex(index int) (Metrics, error)     { return Metrics{}, errors.New("nvml unavailable") }
-func (n *NVML) ByUUID(uuid string) (Metrics, error)    { return Metrics{}, errors.New("nvml unavailable") }
-func (n *NVML) Count() (int, error)                    { return 0, errors.New("nvml unavailable") }
-func (n *NVML) Close() error                           { return nil }
+func (n *NVML) All() ([]Metrics, error)             { return nil, errors.New("nvml unavailable") }
+func (n *NVML) ByIndex(index int) (Metrics, error)  { return Metrics{}, errors.New("nvml unavailable") }
+func (n *NVML) ByUUID(uuid string) (Metrics, error) { return Metrics{}, errors.New("nvml unavailable") }
+func (n *NVML) Count() (int, error)                 { return 0, errors.New("nvml unavailable") }
+func (n *NVML) Processes() ([]ProcessInfo, error)   { return nil, errors.New("nvml unavailable") }
+func (n *NVML) Close() error                        { return nil }

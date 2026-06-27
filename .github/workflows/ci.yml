@@ -14,12 +14,34 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
 
       - name: Run tests
         run: go test -v -race -count=1 ./server/...
 
       - name: Vet
+        run: go vet ./...
+
+  build-cgo:
+    # Compile the CGO + NVML build path (gpu/nvml.go). go-nvml loads
+    # libnvidia-ml at runtime via dlopen, so the bundled headers are enough to
+    # build without a GPU or driver present.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Build with CGO (NVML path)
+        env:
+          CGO_ENABLED: "1"
+        run: go build -v ./...
+
+      - name: Vet with CGO
+        env:
+          CGO_ENABLED: "1"
         run: go vet ./...
 
   lint:
@@ -29,7 +51,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
