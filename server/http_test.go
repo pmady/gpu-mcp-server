@@ -18,11 +18,14 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 func TestHealthz(t *testing.T) {
@@ -89,5 +92,59 @@ func TestHealthzBody(t *testing.T) {
 
 	if !strings.Contains(rec.Body.String(), "ok") {
 		t.Errorf("body = %q, want to contain ok", rec.Body.String())
+	}
+}
+
+// TestHTTP_EndToEnd drives a real MCP client over the HTTP transport: it
+// connects, lists tools, and calls list_gpus, asserting the structured result
+// matches the mock fixture. This exercises the full request/response path
+// through the Streamable HTTP transport, not just routing.
+func TestHTTP_EndToEnd(t *testing.T) {
+	h := newTestHandler()
+	srv := httptest.NewServer(h.HTTPHandler())
+	defer srv.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "test"}, nil)
+	session, err := client.Connect(ctx, &mcp.StreamableClientTransport{Endpoint: srv.URL}, nil)
+	if err != nil {
+		t.Fatalf("connect: %v", err)
+	}
+	defer func() { _ = session.Close() }()
+
+	tools, err := session.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatalf("list tools: %v", err)
+	}
+	names := map[string]bool{}
+	for _, tool := range tools.Tools {
+		names[tool.Name] = true
+	}
+	for _, want := range []string{"list_gpus", "get_gpu_metrics", "gpu_summary"} {
+		if !names[want] {
+			t.Errorf("tool %q not advertised over http; got %v", want, names)
+		}
+	}
+
+	res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "list_gpus"})
+	if err != nil {
+		t.Fatalf("call list_gpus: %v", err)
+	}
+	if res.IsError {
+		t.Fatalf("list_gpus returned tool error: %+v", res.Content)
+	}
+
+	var out ListGPUsOutput
+	data, _ := json.Marshal(res.StructuredContent)
+	if err := json.Unmarshal(data, &out); err != nil {
+		t.Fatalf("decode structured content: %v", err)
+	}
+	if out.Count != 2 {
+		t.Errorf("count = %d, want 2", out.Count)
+	}
+	if len(out.Devices) != 2 || out.Devices[0].UUID != "GPU-aaaa-1111" {
+		t.Errorf("devices = %+v, want first UUID GPU-aaaa-1111", out.Devices)
 	}
 }
