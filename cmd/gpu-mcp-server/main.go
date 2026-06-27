@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -30,6 +31,14 @@ import (
 var version = "dev"
 
 func main() {
+	for _, arg := range os.Args[1:] {
+		switch arg {
+		case "--version", "-v":
+			fmt.Println(version)
+			return
+		}
+	}
+
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, nil)))
 
 	collector, err := gpu.NewNVML()
