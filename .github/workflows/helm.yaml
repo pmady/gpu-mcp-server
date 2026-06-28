@@ -10,6 +10,8 @@ on:
     paths:
       - "deploy/helm/**"
       - ".github/workflows/helm.yaml"
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -32,3 +34,27 @@ jobs:
           helm template gpu-mcp deploy/helm/gpu-mcp-server > /dev/null
           helm template gpu-mcp deploy/helm/gpu-mcp-server --set transport=stdio > /dev/null
           helm template gpu-mcp deploy/helm/gpu-mcp-server --set serviceMonitor.enabled=true > /dev/null
+
+  publish:
+    # Package the chart and push it to GHCR as an OCI artifact on release.
+    needs: lint
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Package chart
+        run: helm package deploy/helm/gpu-mcp-server --destination dist
+
+      - name: Push chart to GHCR
+        run: helm push dist/gpu-mcp-server-*.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
