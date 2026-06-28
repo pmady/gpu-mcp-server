@@ -14,7 +14,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25"
 
       - name: Run tests
         run: go test -v -race -count=1 ./server/...
@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25"
 
       - name: Build with CGO (NVML path)
         env:
@@ -51,9 +51,9 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25"
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.1.6
+          version: latest
