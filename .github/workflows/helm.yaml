@@ -1,0 +1,34 @@
+name: Helm
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deploy/helm/**"
+      - ".github/workflows/helm.yaml"
+  pull_request:
+    paths:
+      - "deploy/helm/**"
+      - ".github/workflows/helm.yaml"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: helm lint
+        run: helm lint deploy/helm/gpu-mcp-server
+
+      - name: helm template (render)
+        run: |
+          helm template gpu-mcp deploy/helm/gpu-mcp-server > /dev/null
+          helm template gpu-mcp deploy/helm/gpu-mcp-server --set transport=stdio > /dev/null
+          helm template gpu-mcp deploy/helm/gpu-mcp-server --set serviceMonitor.enabled=true > /dev/null
