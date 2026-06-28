@@ -1,0 +1,110 @@
+suite: daemonset
+templates:
+  - templates/daemonset.yaml
+tests:
+  - it: renders a DaemonSet
+    asserts:
+      - isKind:
+          of: DaemonSet
+
+  - it: defaults the image tag to the chart appVersion
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/pmady/gpu-mcp-server:0.1.0
+
+  - it: uses http transport args by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --transport
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: http
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "8080"
+
+  - it: exposes the http container port
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+
+  - it: sets liveness and readiness probes on /healthz for http
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /healthz
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /healthz
+
+  - it: injects NVIDIA runtime env by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NVIDIA_DRIVER_CAPABILITIES
+            value: utility
+
+  - it: tolerates the nvidia.com/gpu taint by default
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: nvidia.com/gpu
+            operator: Exists
+            effect: NoSchedule
+
+  - it: switches to stdio args when transport=stdio
+    set:
+      transport: stdio
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: stdio
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: http
+
+  - it: omits ports and probes in stdio mode
+    set:
+      transport: stdio
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].ports
+      - isNull:
+          path: spec.template.spec.containers[0].livenessProbe
+
+  - it: drops NVIDIA env when runtime injection is disabled
+    set:
+      nvidia.runtimeInjection: false
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].env
+
+  - it: mounts the nvml library and device nodes when host mounts are enabled
+    set:
+      nvidia.runtimeInjection: false
+      nvidia.hostMounts.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: nvml-lib
+            hostPath:
+              path: /usr/lib/x86_64-linux-gnu
+              type: Directory
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: nvidia-dev-0
+            hostPath:
+              path: /dev/nvidiactl
+              type: CharDevice
+
+  - it: has no host path volumes by default
+    asserts:
+      - isNull:
+          path: spec.template.spec.volumes
