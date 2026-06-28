@@ -78,6 +78,13 @@ nvidia:
     enabled: false
     # Directory on the host holding libnvidia-ml.so.
     libDir: /usr/lib/x86_64-linux-gnu
+    # NVIDIA device nodes to expose so NVML can reach the driver when the
+    # NVIDIA runtime is not injecting them. Add /dev/nvidia<N> entries for each
+    # GPU on the node (nvidia0, nvidia1, ...).
+    devices:
+      - /dev/nvidiactl
+      - /dev/nvidia-uvm
+      - /dev/nvidia0
 
 # Liveness/readiness probes hit /healthz (http transport only).
 probes:

@@ -95,6 +95,10 @@ spec:
             - name: nvml-lib
               mountPath: {{ .Values.nvidia.hostMounts.libDir }}
               readOnly: true
+            {{- range $i, $dev := .Values.nvidia.hostMounts.devices }}
+            - name: nvidia-dev-{{ $i }}
+              mountPath: {{ $dev }}
+            {{- end }}
           {{- end }}
       {{- if .Values.nvidia.hostMounts.enabled }}
       volumes:
@@ -102,6 +106,12 @@ spec:
           hostPath:
             path: {{ .Values.nvidia.hostMounts.libDir }}
             type: Directory
+        {{- range $i, $dev := .Values.nvidia.hostMounts.devices }}
+        - name: nvidia-dev-{{ $i }}
+          hostPath:
+            path: {{ $dev }}
+            type: CharDevice
+        {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

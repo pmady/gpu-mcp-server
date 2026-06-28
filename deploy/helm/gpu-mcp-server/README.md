@@ -33,8 +33,8 @@ The pod gets NVML access through the NVIDIA container runtime. The chart sets:
 `utility` exposes NVML without reserving a GPU, so the DaemonSet does not
 consume allocatable `nvidia.com/gpu` capacity.
 
-If you do not use the NVIDIA runtime, mount the driver library from the host
-instead:
+If you do not use the NVIDIA runtime, mount the driver library **and the
+NVIDIA device nodes** from the host instead:
 
 ```bash
 helm install gpu-mcp deploy/helm/gpu-mcp-server \
@@ -42,6 +42,13 @@ helm install gpu-mcp deploy/helm/gpu-mcp-server \
   --set nvidia.hostMounts.enabled=true \
   --set nvidia.hostMounts.libDir=/usr/lib/x86_64-linux-gnu
 ```
+
+This mounts `libnvidia-ml.so` plus the device nodes NVML needs
+(`/dev/nvidiactl`, `/dev/nvidia-uvm`, `/dev/nvidia0`). Add a
+`/dev/nvidia<N>` entry under `nvidia.hostMounts.devices` for every GPU on the
+node. Accessing the device nodes usually requires relaxing the default
+`securityContext` (e.g. `--set securityContext.readOnlyRootFilesystem=false`)
+and may need the pod to run privileged depending on your node setup.
 
 ## Scheduling onto GPU nodes
 
@@ -80,7 +87,8 @@ A `ServiceMonitor` (Prometheus Operator) can be enabled with
 | `nodeSelector` | `{}` | GPU node selector |
 | `tolerations` | `nvidia.com/gpu:NoSchedule` | GPU node taint tolerations |
 | `nvidia.runtimeInjection` | `true` | Use NVIDIA runtime to inject driver libs |
-| `nvidia.hostMounts.enabled` | `false` | Mount NVML library from the host instead |
+| `nvidia.hostMounts.enabled` | `false` | Mount NVML library + device nodes from the host instead |
+| `nvidia.hostMounts.devices` | `nvidiactl, nvidia-uvm, nvidia0` | Host NVIDIA device nodes to expose |
 | `resources` | 50m/64Mi … 200m/128Mi | Container resource requests/limits |
 | `service.enabled` | `true` | Create a `Service` (http only) |
 | `serviceMonitor.enabled` | `false` | Create a Prometheus `ServiceMonitor` |
