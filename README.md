@@ -3,6 +3,7 @@
 [![CI](https://github.com/pmady/gpu-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/pmady/gpu-mcp-server/actions/workflows/ci.yml)
 [![Helm](https://github.com/pmady/gpu-mcp-server/actions/workflows/helm.yaml/badge.svg)](https://github.com/pmady/gpu-mcp-server/actions/workflows/helm.yaml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pmady/gpu-mcp-server)](https://goreportcard.com/report/github.com/pmady/gpu-mcp-server)
+[![Go Reference](https://pkg.go.dev/badge/github.com/pmady/gpu-mcp-server.svg)](https://pkg.go.dev/github.com/pmady/gpu-mcp-server)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 An [MCP](https://modelcontextprotocol.io/) server that exposes NVIDIA GPU metrics as tools.
