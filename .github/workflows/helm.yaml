@@ -35,6 +35,12 @@ jobs:
           helm template gpu-mcp deploy/helm/gpu-mcp-server --set transport=stdio > /dev/null
           helm template gpu-mcp deploy/helm/gpu-mcp-server --set serviceMonitor.enabled=true > /dev/null
 
+      - name: Install helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --version v0.5.1
+
+      - name: helm unittest
+        run: helm unittest deploy/helm/gpu-mcp-server
+
   publish:
     # Package the chart and push it to GHCR as an OCI artifact on release.
     needs: lint
