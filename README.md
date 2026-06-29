@@ -205,8 +205,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get involved.
 
 Thanks to all our [contributors](CONTRIBUTORS.md)! Add yourself via PR.
 
-[![pmady](https://github.com/pmady.png?size=80)](https://github.com/pmady) [![pen-pal](https://github.com/pen-pal.png?size=80)](https://github.com/pen-pal) [![AlexMnrs](https://github.com/AlexMnrs.png?size=80)](https://github.com/AlexMnrs) [![Atharv-AC](https://github.com/Atharv-AC.png?size=80)](https://github.com/Atharv-AC)
-
 ## Governance
 
 This project follows [Linux Foundation Minimum Viable Governance](GOVERNANCE.md).
@@ -219,3 +217,13 @@ This project follows [Linux Foundation Minimum Viable Governance](GOVERNANCE.md)
 - [SECURITY.md](SECURITY.md) - vulnerability reporting
 - [AGENTS.md](AGENTS.md) - instructions for AI agents working on this repo
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - community standards
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=pmady%2Fgpu-mcp-server&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=pmady/gpu-mcp-server&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=pmady/gpu-mcp-server&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=pmady/gpu-mcp-server&type=date&legend=top-left" />
+ </picture>
+</a>
