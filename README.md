@@ -5,6 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/pmady/gpu-mcp-server)](https://goreportcard.com/report/github.com/pmady/gpu-mcp-server)
 [![Go Reference](https://pkg.go.dev/badge/github.com/pmady/gpu-mcp-server.svg)](https://pkg.go.dev/github.com/pmady/gpu-mcp-server)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/pmady/gpu-mcp-server/badge)](https://securityscorecards.dev/viewer/?uri=github.com/pmady/gpu-mcp-server)
 
 An [MCP](https://modelcontextprotocol.io/) server that exposes NVIDIA GPU metrics as tools.
 Any MCP-compatible AI agent (Claude, Goose, Cursor, etc.) can query real-time GPU
