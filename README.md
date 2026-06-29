@@ -200,6 +200,12 @@ See [ROADMAP.md](ROADMAP.md) for the 12-month public roadmap.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get involved.
 
+## Contributors
+
+Thanks to all our [contributors](CONTRIBUTORS.md)! Add yourself via PR.
+
+[![pmady](https://github.com/pmady.png?size=80)](https://github.com/pmady) [![pen-pal](https://github.com/pen-pal.png?size=80)](https://github.com/pen-pal) [![AlexMnrs](https://github.com/AlexMnrs.png?size=80)](https://github.com/AlexMnrs) [![Atharv-AC](https://github.com/Atharv-AC.png?size=80)](https://github.com/Atharv-AC)
+
 ## Governance
 
 This project follows [Linux Foundation Minimum Viable Governance](GOVERNANCE.md).
