@@ -10,8 +10,8 @@ Public roadmap for gpu-mcp-server. Updated quarterly.
 - [x] Mock collector for testing without GPU hardware
 - [x] GitHub Actions CI
 - [ ] Publish to MCP servers registry
-- [ ] First tagged release (v0.1.0)
-- [ ] Container image on GitHub Container Registry (ghcr.io)
+- [x] First tagged release (v0.1.0)
+- [x] Container image on GitHub Container Registry (ghcr.io)
 
 ## Q4 2026
 

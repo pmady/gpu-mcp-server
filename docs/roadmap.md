@@ -12,7 +12,7 @@ Public roadmap for gpu-mcp-server. Updated quarterly.
 - [x] GitHub Actions CI
 - [ ] Publish to MCP servers registry
 - [x] First tagged release (v0.1.0)
-- [ ] Container image on GitHub Container Registry (ghcr.io)
+- [x] Container image on GitHub Container Registry (ghcr.io)
 
 ## Q4 2026
 
