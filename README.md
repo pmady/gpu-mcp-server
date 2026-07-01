@@ -192,6 +192,7 @@ through cgo — no sidecar, no network hops, no metric pipeline to configure.
 - **Language:** Go
 - **AAIF project alignment:** [MCP](https://modelcontextprotocol.io/)
 - **Related:** [keda-gpu-scaler](https://github.com/pmady/keda-gpu-scaler) (GPU autoscaling for Kubernetes)
+- **Whitepaper:** [GPU-Aware Autoscaling in Cloud Native AI Infrastructure](https://github.com/pmady/keda-gpu-scaler/blob/main/docs/cncf-tag-infra/gpu-aware-autoscaling-whitepaper.md) — CNCF TAG Infrastructure initiative ([TOC #2188](https://github.com/cncf/toc/issues/2188))
 
 ## Roadmap
 
