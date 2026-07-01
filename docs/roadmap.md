@@ -10,7 +10,7 @@ Public roadmap for gpu-mcp-server. Updated quarterly.
 - [x] NVML-based collector with MIG support
 - [x] Mock collector for testing without GPU hardware
 - [x] GitHub Actions CI
-- [ ] Publish to MCP servers registry
+- [x] Publish to MCP servers registry
 - [x] First tagged release (v0.1.0)
 - [x] Container image on GitHub Container Registry (ghcr.io)
 
