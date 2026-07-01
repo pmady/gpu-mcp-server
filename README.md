@@ -211,6 +211,7 @@ This project follows [Linux Foundation Minimum Viable Governance](GOVERNANCE.md)
 
 ## Documentation
 
+- [Full documentation](https://gpu-mcp-server.readthedocs.io) - hosted on Read the Docs
 - [ROADMAP.md](ROADMAP.md) - public roadmap
 - [GOVERNANCE.md](GOVERNANCE.md) - decision-making process
 - [DEPENDENCIES.md](DEPENDENCIES.md) - external dependencies and licenses
