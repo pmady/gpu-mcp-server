@@ -172,6 +172,32 @@ make docker      # container image
 
 Tests use a mock collector, so they run anywhere no GPU hardware required.
 
+## Docker
+
+Prebuilt multi-arch images (linux/amd64, linux/arm64) are published to GHCR on every release.
+
+```bash
+docker pull ghcr.io/pmady/gpu-mcp-server:latest
+docker run --rm -i --gpus all ghcr.io/pmady/gpu-mcp-server:latest
+```
+
+The host needs the [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit)
+installed for `--gpus all` to work. The server speaks MCP over stdio, so the
+`-i` flag is required — don't drop it.
+
+```json
+{
+  "mcpServers": {
+    "gpu": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "--gpus", "all", "ghcr.io/pmady/gpu-mcp-server:latest"]
+    }
+  }
+}
+```
+
+Pin a specific version via tag instead of `:latest`, e.g. `ghcr.io/pmady/gpu-mcp-server:v0.1.0`.
+
 ## Architecture
 
 ```
