@@ -1,0 +1,23 @@
+# Defaults work unmodified for a fresh-ish AWS account: g4dn.xlarge (4 vCPU)
+# + g5g.xlarge (4 vCPU) = 8 vCPUs total, which fits the default
+# "Running On-Demand G and VT instances" (L-DB2E81BA) quota in us-west-2.
+region             = "us-west-2"
+cluster_name       = "gpu-mcp-server-e2e"
+kubernetes_version = "1.35"
+
+gpu_amd64_instance_type = "g4dn.xlarge"
+gpu_amd64_node_count    = 1
+
+gpu_arm64_instance_type = "g5g.xlarge"
+gpu_arm64_node_count    = 1
+
+helm_timeout = 900
+
+gpu_operator_chart_version = "v26.3.2"
+
+mcp_image_repository = "ghcr.io/pmady/gpu-mcp-server"
+mcp_image_tag        = "v0.1.0"
+
+tags = {
+  Project = "gpu-mcp-server"
+}

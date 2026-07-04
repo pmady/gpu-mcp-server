@@ -1,0 +1,42 @@
+# Short GPU burn for the arm64 (NVIDIA T4G / Graviton) node, to move
+# utilization off idle during manual validation (see infra/e2e/README.md).
+# There is no ready-made arm64 gpu-burn image, but nvidia/cuda:*-devel is
+# multi-arch and ships nvcc, so this compiles a tiny burn on the node and runs
+# it for ~60s. The image is a few GB, so the pod may sit ContainerCreating on
+# first pull. Delete the Job when done: kubectl delete job gpu-burn-arm64
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gpu-burn-arm64
+  namespace: default
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      containers:
+        - name: gpu-burn
+          image: nvidia/cuda:12.6.2-devel-ubuntu22.04
+          command: ["bash", "-c"]
+          args:
+            - |
+              cat > /tmp/burn.cu <<'EOF'
+              #include <cuda_runtime.h>
+              #include <time.h>
+              __global__ void k(float* a, int n) {
+                int i = blockIdx.x * blockDim.x + threadIdx.x;
+                if (i < n) { float x = a[i]; for (int j = 0; j < 20000; j++) x = x * 1.0001f + 0.0001f; a[i] = x; }
+              }
+              int main() {
+                int n = 1 << 20; float* d; cudaMalloc(&d, n * sizeof(float));
+                time_t s = time(0);
+                while (time(0) - s < 60) { k<<<(n + 255) / 256, 256>>>(d, n); cudaDeviceSynchronize(); }
+                return 0;
+              }
+              EOF
+              nvcc -arch=sm_75 -o /tmp/burn /tmp/burn.cu && /tmp/burn
+          resources:
+            limits:
+              nvidia.com/gpu: 1

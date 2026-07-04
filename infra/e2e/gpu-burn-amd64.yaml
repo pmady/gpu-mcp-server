@@ -1,0 +1,24 @@
+# Short GPU burn for the amd64 (Tesla T4) node, to move utilization off idle
+# during manual validation (see infra/e2e/README.md). The community gpu-burn
+# image is amd64-only, so this is pinned to the amd64 node; the arm64 sibling
+# compiles its own burn (gpu-burn-arm64.yaml). Requests one GPU, runs ~60s,
+# then exits. Delete the Job when done: kubectl delete job gpu-burn-amd64
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gpu-burn-amd64
+  namespace: default
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+        - name: gpu-burn
+          image: oguzpastirmaci/gpu-burn:latest
+          args: ["60"] # burn for 60 seconds
+          resources:
+            limits:
+              nvidia.com/gpu: 1
