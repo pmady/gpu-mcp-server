@@ -3,7 +3,8 @@
 >
 > Real GPU hardware is not cheap. The AWS default (two node groups, one per
 > architecture) runs roughly **~$1.1/hr all-in** — about **$26/day**. The
-> Azure default is cheaper, roughly **~$0.55/hr (~$13/day)**.
+> Azure default is cheaper, roughly **~$0.55/hr (~$13/day)**. The GCP default
+> is similarly cheap, roughly **~$0.65/hr (~$16/day)**.
 >
 > **Bring the infra up, run the e2e tests, destroy everything.** Don't leave a
 > cluster running "just in case" — see [Teardown](#teardown) in each section.
@@ -40,6 +41,17 @@
 > az vm list-usage --location eastus \
 >   --query "[?contains(name.value, 'NCASv3_T4')]" -o table
 > ```
+>
+> GCP tells the same story: fresh projects have a GPU quota of **0**. Two
+> quotas gate the default T4 node pool — the regional **"NVIDIA T4 GPUs"**
+> quota in your `region` and the global **"GPUs (all regions)"** quota —
+> both need to be **at least 1** before applying. See the
+> [GCP quota section](#gpu-quota--your-apply-fails-without-it) below. Verify
+> with:
+>
+> ```bash
+> gcloud compute regions describe us-central1 --format="value(quotas)"
+> ```
 
 # Infrastructure-as-Code for gpu-mcp-server
 
@@ -48,8 +60,7 @@ end-to-end test `gpu-mcp-server` against real NVIDIA hardware — including
 arm64 (Graviton + NVIDIA T4G). These are test clusters, not production
 infrastructure; see [`infra/e2e`](../e2e) for the harness that drives them.
 
-AWS (EKS) and Azure (AKS) are implemented today; GCP is planned as a sibling
-directory.
+AWS (EKS), Azure (AKS), and GCP (GKE) are implemented today.
 
 ## Layout
 
@@ -57,13 +68,13 @@ directory.
 infra/terraform/
   aws/        # Amazon EKS (implemented)
   azure/      # Azure AKS  (implemented)
-  # gcp/      # Google GKE  (planned)
+  gcp/        # Google GKE (implemented)
 ```
 
 Each cloud lives in its own self-contained, independently `apply`-able
 directory (its own providers, variables, outputs, state). They deliberately do
-**not** share a root module, so adding GCP later is a matter of dropping in a
-sibling that follows the same convention — no rework of the AWS or Azure
+**not** share a root module, so adding a new cloud is a matter of dropping in
+a sibling that follows the same convention — no rework of the existing
 stacks.
 
 The shared contract every directory aims to honour:
@@ -82,7 +93,7 @@ The shared contract every directory aims to honour:
 |---|---|---|
 | AWS EKS | [`aws/`](./aws) | ✅ Implemented (dual-arch: amd64 + arm64) |
 | Azure AKS | [`azure/`](./azure) | ✅ Implemented (single GPU node, amd64 only) |
-| GCP GKE | `gcp/` | ⏳ Planned |
+| GCP GKE | [`gcp/`](./gcp) | ✅ Implemented (single GPU node, amd64 only) |
 
 ## Conventions
 
@@ -90,8 +101,8 @@ The shared contract every directory aims to honour:
   (currently `1.15.6`); `required_version` floors at the current minor
   (`>= 1.15.0`).
 - **Providers are version-pinned** (`aws ~> 6.51`, `azurerm ~> 4.79`,
-  `kubernetes ~> 3.2`, `helm ~> 3.2`), confirmed against the Terraform
-  Registry at authoring time.
+  `google ~> 6.12`, `kubernetes ~> 3.2`, `helm ~> 3.2`), confirmed against the
+  Terraform Registry at authoring time.
 - **`.terraform.lock.hcl` is generated, not hand-written** — running
   `terraform init` in a stack directory for the first time creates it. It's
   worth committing once generated, so everyone (and CI, if it's ever added)
@@ -334,6 +345,128 @@ CoreDNS co-locate with `gpu-mcp-server`.
 
 ---
 
+# GCP GKE GPU test cluster
+
+Sibling to the AWS and Azure stacks. One `terraform apply` provisions
+everything, no manual steps:
+
+- a **zonal** GKE cluster (native `google_container_cluster`, VPC-native, the
+  default VPC, `deletion_protection = false` so `terraform destroy` actually
+  works),
+- **one** fixed-size, on-demand GPU node pool (`google_container_node_pool`)
+  as the cluster's untainted GPU pool (`n1-standard-4`, 1x NVIDIA T4, 4
+  vCPUs, Ubuntu node image), created with `gpu_driver_version = "INSTALLATION_DISABLED"` so
+  GKE installs no GPU software of its own — `remove_default_node_pool = true`
+  drops the generic default pool it comes with, leaving the GPU pool as the
+  cluster's only pool,
+- the **NVIDIA GPU operator** (host driver, container toolkit, device
+  plugin, GPU-feature-discovery labels, DCGM, and the `nvidia` RuntimeClass —
+  the same driver split as the Azure stack), and
+- **`gpu-mcp-server`**, installed from the in-tree chart, same as AWS and
+  Azure.
+
+Like AKS, GKE manages its own networking, so there is no VPC module — a
+native `google_container_cluster` resource plus a `google_container_node_pool`
+is the whole cluster.
+
+GCP has **no arm64 NVIDIA GPU machine type**, so this stack only ever
+validates the linux/amd64 `gpu-mcp-server` image — arm64 coverage comes from
+the AWS stack's `gpu_arm64` node group.
+
+## Prerequisites
+
+- **Terraform 1.15.6** — pinned in [`gcp/.terraform-version`](./gcp/.terraform-version).
+- **gcloud CLI**, authenticated with Application Default Credentials
+  (`gcloud auth application-default login`) for the google provider, plus a
+  target project (`project_id` is required, no default).
+- The **`container.googleapis.com`** and **`compute.googleapis.com`** APIs
+  enabled on the project (`gcloud services enable container.googleapis.com
+  compute.googleapis.com`).
+- **kubectl**, and the **`gke-gcloud-auth-plugin`** — only needed for the
+  post-apply `gcloud container clusters get-credentials`; the
+  Kubernetes/Helm providers authenticate against the cluster with a
+  short-lived google access token, so no kubeconfig is required to apply.
+- The **GPU quota** below.
+- Registry access from the machine running Terraform: `terraform init`
+  fetches the google/kubernetes/helm providers from the public Terraform
+  Registry, and the apply pulls the GPU operator chart from
+  `helm.ngc.nvidia.com`.
+
+## GPU quota — your apply fails without it
+
+Fresh GCP projects have a GPU quota of **0**. Two separate quotas gate the
+default T4 node pool, and both need to be **at least 1**:
+
+- the regional quota, **"NVIDIA T4 GPUs"**, in your `region`; and
+- the global quota, **"GPUs (all regions)"**.
+
+Request both before applying (Console → **IAM & Admin → Quotas**, filter
+"GPU"). Verify the regional one with:
+
+```bash
+gcloud compute regions describe us-central1 --format="value(quotas)"
+```
+
+## Usage
+
+```bash
+cd infra/terraform/gcp
+
+gcloud auth application-default login
+gcloud config set project <your-project-id>
+
+cp terraform.tfvars.example terraform.tfvars   # set project_id at minimum
+terraform init
+terraform apply
+
+# Point kubectl at the new cluster (also emitted as the `configure_kubectl` output)
+gcloud container clusters get-credentials gpu-mcp-server-e2e \
+  --zone us-central1-a --project <your-project-id>
+
+kubectl get nodes -L nvidia.com/gpu.present
+kubectl -n gpu-mcp get pods -o wide
+```
+
+## Common overrides
+
+| Variable | Default | Notes |
+|---|---|---|
+| `project_id` | *(required)* | GCP project to deploy into — no default. |
+| `region` / `zone` | `us-central1` / `us-central1-a` | Zonal cluster; pick a zone with T4 capacity + your quota. |
+| `gpu_machine_type` | `n1-standard-4` (T4-compatible, 4 vCPUs) | |
+| `gpu_accelerator_type` | `nvidia-tesla-t4` | |
+| `gpu_node_count` | `1` | Fixed-size pool (no autoscaler). |
+| `kubernetes_version` | `1.33` | Used as GKE's `min_master_version`. |
+| `gpu_operator_chart_version` | `v26.3.2` | NVIDIA GPU operator chart. |
+| `mcp_image_repository` / `mcp_image_tag` | chart defaults | Pin the exact `gpu-mcp-server` image under test. |
+
+## Cost & teardown
+
+You pay for the GKE cluster management fee (~$0.10/hr) plus the GPU node —
+`n1-standard-4` (~$0.19/hr) and 1x T4 (~$0.35/hr) — rough list-price
+ballparks (us-central1, USD; verify for your region), call it **~$0.65/hr
+(~$16/day)**. **Destroy when done:**
+
+```bash
+terraform destroy   # works because deletion_protection = false on the cluster
+# leftovers, if a destroy is ever interrupted:
+gcloud compute instances list --filter="labels.project=gpu-mcp-server"
+```
+
+## How the cluster satisfies the chart
+
+| Chart requirement | Provided by |
+|---|---|
+| `nodeSelector: nvidia.com/gpu.present=true` (set by Terraform via Helm `set`) | GPU-feature-discovery (operator) labels the node |
+| `nvidia.runtimeClassName: nvidia` (set by Terraform) | operator's container toolkit configures containerd's `nvidia` runtime and creates the RuntimeClass |
+| driver + NVML libraries injected into the unprivileged container | operator's driver DaemonSet (`gpu_driver_version = "INSTALLATION_DISABLED"` on the node pool skips GKE's own driver install) |
+| `tolerations: nvidia.com/gpu` | no-op — the GPU node pool is untainted, and is the cluster's only pool after `remove_default_node_pool` |
+
+The GPU node pool is untainted, so the operator's controllers and CoreDNS
+co-locate with `gpu-mcp-server`.
+
+---
+
 # Validating a deployed cluster
 
 Bringing a stack up installs `gpu-mcp-server` but doesn't test it. Validation is
@@ -344,7 +477,8 @@ walkthrough (with the exact commands and the interactive MCP-client checks) is
 in **[`infra/e2e/README.md`](../e2e/README.md)**. In short:
 
 1. `kubectl get nodes` / `kubectl get pods -n gpu-mcp` — every GPU node `Ready`
-   with a `1/1 Running` pod (two on AWS: amd64 + arm64; one on Azure).
+   with a `1/1 Running` pod (two on AWS: amd64 + arm64; one on Azure and GCP,
+   single amd64 pod).
 2. `nvidia-smi` on each pod for ground-truth GPU metrics.
 3. Connect an MCP client (e.g. Claude) to each pod and confirm the server's
    `list_gpus` / `get_gpu_metrics` / `gpu_summary` match the `nvidia-smi`

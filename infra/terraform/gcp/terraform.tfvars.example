@@ -1,0 +1,24 @@
+# All variables have sensible defaults except project_id. Copy to
+# terraform.tfvars, set project_id, and override anything else you need.
+# You must hold the "NVIDIA T4 GPUs" regional quota (>= 1) plus the global
+# "GPUs (all regions)" quota in your project, with container.googleapis.com
+# and compute.googleapis.com enabled.
+
+project_id           = "your-gcp-project-id"
+region               = "us-central1"
+zone                 = "us-central1-a"
+cluster_name         = "gpu-mcp-server-e2e"
+kubernetes_version   = "1.33"
+gpu_machine_type     = "n1-standard-4"
+gpu_accelerator_type = "nvidia-tesla-t4"
+gpu_node_count       = 1
+helm_timeout         = 900
+
+gpu_operator_chart_version = "v26.3.2"
+
+mcp_image_repository = "ghcr.io/pmady/gpu-mcp-server"
+mcp_image_tag        = "v0.1.0"
+
+labels = {
+  project = "gpu-mcp-server"
+}

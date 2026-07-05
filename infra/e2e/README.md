@@ -28,8 +28,8 @@ kubectl get pods -n gpu-mcp
 
 Expect every GPU node `Ready` with one `1/1 Running` `gpu-mcp-server-*` pod. On
 AWS that is two nodes / two pods — one amd64 (Tesla T4) and one arm64 (NVIDIA
-T4G); on Azure a single amd64 node. Grab the pod names and their arch (the pod
-names change every rollout — don't hard-code them):
+T4G); on Azure and GCP a single amd64 node (Tesla T4) each. Grab the pod names
+and their arch (the pod names change every rollout — don't hard-code them):
 
 ```bash
 kubectl -n gpu-mcp get pods \
@@ -116,8 +116,8 @@ change. Clean up:
 kubectl delete job gpu-burn-amd64 gpu-burn-arm64
 ```
 
-> On Azure (single amd64 node) only `gpu-burn-amd64.yaml` applies — there is no
-> arm64 GPU node to load.
+> On Azure and GCP (single amd64 node) only `gpu-burn-amd64.yaml` applies —
+> there is no arm64 GPU node to load.
 
 ## Done
 

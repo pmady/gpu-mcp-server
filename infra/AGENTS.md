@@ -45,7 +45,7 @@ infra/
   terraform/
     aws/        # Amazon EKS (implemented)
     azure/      # Azure AKS  (implemented)
-    # gcp/      # Google GKE (planned)
+    gcp/        # Google GKE (implemented)
     README.md   # index + per-cloud details
   e2e/
     README.md          # manual validation procedure (nodes -> nvidia-smi -> MCP -> load)
@@ -65,8 +65,9 @@ One `terraform apply` produces a cluster that is immediately ready for e2e
 tests, with no manual post-apply steps:
 
 1. a cluster + a GPU node pool (AWS runs **two** — one per CPU architecture —
-   so both the amd64 and arm64 `gpu-mcp-server` images get validated; Azure has
-   no arm64 NVIDIA GPU VM size, so it validates linux/amd64 only);
+   so both the amd64 and arm64 `gpu-mcp-server` images get validated; Azure and
+   GCP have no arm64 NVIDIA GPU SKU, so they validate linux/amd64 only — AWS is
+   the only dual-arch stack);
 2. the GPU made usable in Kubernetes on every GPU node — a working driver, the
    NVIDIA device plugin, the `nvidia` RuntimeClass, and the
    `nvidia.com/gpu.present` node label;
@@ -150,7 +151,9 @@ stack's README section.
   **8** vCPUs; zeroing one node group's count needs **4**.
 - Azure: "Standard NCASv3_T4 Family vCPUs", per location. The default
   `Standard_NC4as_T4_v3` node needs **4** vCPUs.
-- GCP (when added): a global GPU quota plus per-region, per-GPU-type quotas.
+- GCP: two separate quotas, both needed — the regional **"NVIDIA T4 GPUs"**
+  quota in your `region`, and the global **"GPUs (all regions)"** quota. Both
+  need to be **at least 1**.
 
 ## Cost & teardown
 
