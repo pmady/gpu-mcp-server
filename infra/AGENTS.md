@@ -129,6 +129,11 @@ approach a stack uses and why in its own files.
   published image; set `mcp_image_tag` (and `mcp_image_repository` if needed)
   to a real, published tag of `ghcr.io/pmady/gpu-mcp-server` when testing a
   specific build.
+- **Terse comments.** Keep comments short and single-line; let the code speak
+  for itself, and put the detailed "why" in the stack's README, not long inline
+  comments — mirrors [AI_GUIDELINES.md](../AI_GUIDELINES.md).
+- **One trailing newline.** Every file ends with exactly one trailing newline —
+  no missing final newline.
 
 ## Scope: e2e validation, not production deployment
 

@@ -1,30 +1,8 @@
-# NVIDIA GPU operator.
-#
-# The GPU node pool sets gpu_driver_version = "INSTALLATION_DISABLED" and runs the Ubuntu
-# node image (see main.tf), so GKE installs NO GPU software. The operator
-# therefore owns the entire stack:
-#   - the NVIDIA host driver (driver.enabled = true),
-#   - the NVIDIA container toolkit, which configures containerd's `nvidia`
-#     runtime handler the `nvidia` RuntimeClass points at (toolkit.enabled = true),
-#   - the NVIDIA k8s device plugin (advertises nvidia.com/gpu),
-#   - node-feature-discovery + GPU-feature-discovery, which apply the
-#     `nvidia.com/gpu.present=true` node label gpu-mcp-server's nodeSelector
-#     targets,
-#   - DCGM / dcgm-exporter,
-#   - the `nvidia` RuntimeClass referenced by the gpu-mcp-server pod template.
-#
-# This is the same driver/operator split as the Azure sibling, and NVIDIA's
-# documented approach for GKE (skip the GKE driver, run the operator):
-# https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/google-gke.html
+# NVIDIA GPU operator. Owns the full driver + toolkit stack; the GPU node pool
+# sets INSTALLATION_DISABLED (see main.tf). Same split as the Azure sibling.
 
-# GKE-specific: GKE restricts the system-node-critical / system-cluster-critical
-# priority classes to kube-system via an admission ResourceQuota, so the GPU
-# operator's pods (which request those priority classes) are rejected in any
-# other namespace with "insufficient quota to match these scopes" — the operator
-# never schedules a single pod and every helm install times out. Create the
-# operator namespace ourselves with a ResourceQuota that permits those
-# priority-class scopes so the pods can be admitted. The AWS/Azure siblings
-# don't need this (only GKE enforces the restriction).
+# GKE restricts the system-node-critical/system-cluster-critical priority classes;
+# this quota lets the operator's pods be admitted. see infra/terraform/README.md
 resource "kubernetes_namespace_v1" "gpu_operator" {
   metadata {
     name = "gpu-operator"
@@ -58,22 +36,14 @@ resource "helm_release" "gpu_operator" {
   name      = "gpu-operator"
   namespace = kubernetes_namespace_v1.gpu_operator.metadata[0].name
 
-  # Namespace is created above (with the priority-class ResourceQuota), so the
-  # helm release must not try to create it.
+  # Namespace created above with the priority-class quota.
   create_namespace = false
 
   repository = "https://helm.ngc.nvidia.com/nvidia"
   chart      = "gpu-operator"
   version    = var.gpu_operator_chart_version
 
-  # On GKE the operator (not the node image) builds and installs the driver and
-  # toolkit — driver.enabled=true. Do NOT set hostPaths.driverInstallDir /
-  # toolkit.installDir here: those point the driver/toolkit at GKE's
-  # /home/kubernetes/bin/nvidia path, which is only correct for the GKE-managed
-  # driver flow (driver.enabled=false). With driver.enabled=true the operator
-  # builds the driver at its own default path, so overriding the install dir
-  # makes the toolkit's driver-validation look in the wrong place and loop
-  # forever, stalling the whole stack.
+  # Operator builds the driver and toolkit; don't override the install dirs. see infra/terraform/README.md
   set = [
     {
       name  = "driver.enabled"
@@ -84,12 +54,34 @@ resource "helm_release" "gpu_operator" {
       value = "true"
     },
 
-    # Inject GPUs via the Container Device Interface (CDI) instead of the legacy
-    # containerd `nvidia` runtime handler. On GKE 1.33+ (containerd 2.0) the
-    # legacy handler rewrites /etc/containerd/config.toml and drops GKE's CNI
-    # bin_dir, breaking pod networking ("plugin ptp not found in /opt/cni/bin").
-    # CDI is NVIDIA's documented GKE path and avoids that rewrite. See:
-    # https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/google-gke.html
+    # Force the toolkit to edit containerd's config in place so GKE's CNI bin_dir
+    # survives (GKE 1.33+, containerd 2.0). see infra/terraform/README.md
+    {
+      name  = "toolkit.env[0].name"
+      value = "CONTAINERD_CONFIG"
+    },
+    {
+      name  = "toolkit.env[0].value"
+      value = "/etc/containerd/config.toml"
+    },
+    {
+      name  = "toolkit.env[1].name"
+      value = "CONTAINERD_SOCKET"
+    },
+    {
+      name  = "toolkit.env[1].value"
+      value = "/run/containerd/containerd.sock"
+    },
+    {
+      name  = "toolkit.env[2].name"
+      value = "RUNTIME_CONFIG_SOURCE"
+    },
+    {
+      name  = "toolkit.env[2].value"
+      value = "file"
+    },
+
+    # Inject GPUs via CDI (NVIDIA's recommended mode on GKE).
     {
       name  = "cdi.enabled"
       value = "true"
@@ -100,8 +92,7 @@ resource "helm_release" "gpu_operator" {
     },
   ]
 
-  # Driver build + device-plugin/GFD rollout and node labelling can take several
-  # minutes after the node joins.
+  # Driver build + device-plugin rollout can take several minutes after the node joins.
   wait    = true
   timeout = var.helm_timeout
 

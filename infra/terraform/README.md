@@ -465,6 +465,49 @@ gcloud compute instances list --filter="labels.project=gpu-mcp-server"
 The GPU node pool is untainted, so the operator's controllers and CoreDNS
 co-locate with `gpu-mcp-server`.
 
+## GKE-specific operator settings
+
+GKE needs three things the EKS and AKS stacks don't, plus the same driver
+split as Azure:
+
+- **Driver/toolkit split.** The node pool sets
+  `gpu_driver_version = "INSTALLATION_DISABLED"` and runs the Ubuntu node
+  image, so GKE installs no GPU software — the NVIDIA GPU operator owns the
+  whole stack (`driver.enabled=true`), the same split as the Azure stack.
+
+- **Priority-class ResourceQuota.** GKE restricts the `system-node-critical`
+  and `system-cluster-critical` priority classes to `kube-system` via an
+  admission ResourceQuota. The operator's pods request those priority classes,
+  so in any other namespace they're rejected ("insufficient quota to match
+  these scopes") and nothing schedules. The stack therefore creates the
+  `gpu-operator` namespace with its own ResourceQuota whose `scopeSelector`
+  permits those priority-class scopes. AWS and AKS don't enforce this.
+
+- **Disable GKE's managed device plugin.** The GPU node pool carries the label
+  `gke-no-default-nvidia-gpu-device-plugin=true`. Without it GKE deploys its
+  own NVIDIA device plugin into `kube-system`, which conflicts with the
+  operator's device plugin and validator and wedges the operator rollout.
+
+- **Toolkit `RUNTIME_CONFIG_SOURCE=file` (GKE 1.33+ / containerd 2.0 CNI
+  fix).** By default the operator's container toolkit configures containerd in
+  "command" mode: it runs `containerd config dump` and writes the full result
+  back to `/etc/containerd/config.toml`, baking in the upstream default
+  `bin_dir = "/opt/cni/bin"` and dropping GKE's real CNI bin dir
+  (`/home/kubernetes/bin`). Every pod sandbox on the node then fails with
+  `failed to find plugin "loopback"/"ptp" in path [/opt/cni/bin]`, so
+  `nvidia-operator-validator` (and the device-plugin/GFD/dcgm behind it) never
+  start. Setting `toolkit.env` `RUNTIME_CONFIG_SOURCE=file` (with
+  `CONTAINERD_CONFIG=/etc/containerd/config.toml`,
+  `CONTAINERD_SOCKET=/run/containerd/containerd.sock`) makes the toolkit edit
+  the existing `config.toml` in place — adding only the `nvidia` runtime and
+  leaving GKE's CNI settings intact. Reference:
+  NVIDIA/nvidia-container-toolkit#1222.
+
+Apply this on a **fresh** cluster. Don't try to fix an already-broken node
+with `helm upgrade` — helm's pre-upgrade hook pod can't get networking once
+the CNI config is clobbered, so the upgrade deadlocks; recreate the node (clean
+containerd config) instead.
+
 ---
 
 # Validating a deployed cluster
