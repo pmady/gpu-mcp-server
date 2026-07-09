@@ -6,6 +6,12 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/pmady/gpu-mcp-server.svg)](https://pkg.go.dev/github.com/pmady/gpu-mcp-server)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/pmady/gpu-mcp-server/badge)](https://securityscorecards.dev/viewer/?uri=github.com/pmady/gpu-mcp-server)
+[![OpenSSF Best Practices](https://img.shields.io/badge/OpenSSF_Best_Practices-in_progress-yellow)](https://www.bestpractices.dev/en)
+
+> **Note:** the OpenSSF Best Practices questionnaire is in progress. Once the
+> project entry is registered at <https://www.bestpractices.dev/en>, swap the
+> static badge above for the live one:
+> `[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/<ID>/badge)](https://www.bestpractices.dev/projects/<ID>)`
 
 An [MCP](https://modelcontextprotocol.io/) server that exposes NVIDIA GPU metrics as tools.
 Any MCP-compatible AI agent (Claude, Goose, Cursor, etc.) can query real-time GPU
