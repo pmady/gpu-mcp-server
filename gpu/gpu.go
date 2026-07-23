@@ -18,16 +18,18 @@ package gpu
 
 // Metrics is a point-in-time snapshot for a single GPU or MIG instance.
 type Metrics struct {
-	Index    int    `json:"index"`
-	UUID     string `json:"uuid"`
-	Name     string `json:"name"`
-	GPUUtil  uint32 `json:"gpu_utilization_percent"`
-	MemUtil  uint32 `json:"memory_utilization_percent"`
-	MemUsed  uint64 `json:"memory_used_mib"`
-	MemTotal uint64 `json:"memory_total_mib"`
-	TempC    uint32 `json:"temperature_celsius"`
-	PowerW   uint32 `json:"power_draw_watts"`
-	PowerCap uint32 `json:"power_limit_watts"`
+	Index         int    `json:"index"`
+	UUID          string `json:"uuid"`
+	Name          string `json:"name"`
+	DriverVersion string `json:"driver_version,omitempty"`
+	CUDAVersion   string `json:"cuda_version,omitempty"`
+	GPUUtil       uint32 `json:"gpu_utilization_percent"`
+	MemUtil       uint32 `json:"memory_utilization_percent"`
+	MemUsed       uint64 `json:"memory_used_mib"`
+	MemTotal      uint64 `json:"memory_total_mib"`
+	TempC         uint32 `json:"temperature_celsius"`
+	PowerW        uint32 `json:"power_draw_watts"`
+	PowerCap      uint32 `json:"power_limit_watts"`
 	// bus throughput
 	PCIeTxKBps   uint32 `json:"pcie_tx_kbps"`
 	PCIeRxKBps   uint32 `json:"pcie_rx_kbps"`

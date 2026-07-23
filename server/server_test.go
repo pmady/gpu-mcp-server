@@ -25,28 +25,32 @@ import (
 
 var testDevices = []gpu.Metrics{
 	{
-		Index:    0,
-		UUID:     "GPU-aaaa-1111",
-		Name:     "NVIDIA A100-SXM4-80GB",
-		GPUUtil:  85,
-		MemUtil:  70,
-		MemUsed:  57344,
-		MemTotal: 81920,
-		TempC:    72,
-		PowerW:   300,
-		PowerCap: 400,
+		Index:         0,
+		UUID:          "GPU-aaaa-1111",
+		Name:          "NVIDIA A100-SXM4-80GB",
+		DriverVersion: "550.90.07",
+		CUDAVersion:   "12.4",
+		GPUUtil:       85,
+		MemUtil:       70,
+		MemUsed:       57344,
+		MemTotal:      81920,
+		TempC:         72,
+		PowerW:        300,
+		PowerCap:      400,
 	},
 	{
-		Index:    1,
-		UUID:     "GPU-bbbb-2222",
-		Name:     "NVIDIA A100-SXM4-80GB",
-		GPUUtil:  20,
-		MemUtil:  15,
-		MemUsed:  12288,
-		MemTotal: 81920,
-		TempC:    38,
-		PowerW:   75,
-		PowerCap: 400,
+		Index:         1,
+		UUID:          "GPU-bbbb-2222",
+		Name:          "NVIDIA A100-SXM4-80GB",
+		DriverVersion: "550.90.07",
+		CUDAVersion:   "12.4",
+		GPUUtil:       20,
+		MemUtil:       15,
+		MemUsed:       12288,
+		MemTotal:      81920,
+		TempC:         38,
+		PowerW:        75,
+		PowerCap:      400,
 	},
 }
 
@@ -102,6 +106,12 @@ func TestGetMetrics_ByIndex(t *testing.T) {
 	}
 	if out.TempC != 72 {
 		t.Errorf("TempC = %d, want 72", out.TempC)
+	}
+	if out.DriverVersion != "550.90.07" {
+		t.Errorf("DriverVersion = %q, want 550.90.07", out.DriverVersion)
+	}
+	if out.CUDAVersion != "12.4" {
+		t.Errorf("CUDAVersion = %q, want 12.4", out.CUDAVersion)
 	}
 }
 
