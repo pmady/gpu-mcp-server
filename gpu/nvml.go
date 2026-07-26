@@ -132,6 +132,12 @@ func (n *NVML) readDevice(index int) (Metrics, error) {
 	if v, ret := dev.GetName(); ret == nvml.SUCCESS {
 		m.Name = v
 	}
+	if v, ret := nvml.SystemGetDriverVersion(); ret == nvml.SUCCESS {
+		m.DriverVersion = v
+	}
+	if v, ret := nvml.SystemGetCudaDriverVersion(); ret == nvml.SUCCESS {
+		m.CUDAVersion = formatCUDAVersion(v)
+	}
 	if u, ret := dev.GetUtilizationRates(); ret == nvml.SUCCESS {
 		m.GPUUtil = u.Gpu
 		m.MemUtil = u.Memory
