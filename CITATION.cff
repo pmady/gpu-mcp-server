@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it as below."
+title: "gpu-mcp-server: NVIDIA GPU metrics for AI agents over the Model Context Protocol"
+authors:
+  - family-names: "Madduri"
+    given-names: "Pavan"
+type: software
+version: 0.2.0
+date-released: 2026-09-20
+license: Apache-2.0
+url: "https://github.com/pmady/gpu-mcp-server"
+repository-code: "https://github.com/pmady/gpu-mcp-server"
+keywords:
+  - mcp
+  - model-context-protocol
+  - gpu
+  - nvidia
+  - nvml
+  - ai-agents
+  - observability
