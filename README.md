@@ -227,6 +227,21 @@ through cgo — no sidecar, no network hops, no metric pipeline to configure.
 - **Related:** [keda-gpu-scaler](https://github.com/pmady/keda-gpu-scaler) (GPU autoscaling for Kubernetes)
 - **Whitepaper:** [GPU-Aware Autoscaling in Cloud Native AI Infrastructure](https://github.com/pmady/keda-gpu-scaler/blob/main/docs/cncf-tag-infra/gpu-aware-autoscaling-whitepaper.md) — CNCF TAG Infrastructure initiative ([TOC #2188](https://github.com/cncf/toc/issues/2188))
 
+## Citing
+
+If you use gpu-mcp-server in your research or writing, please cite it via its DOI. Full citation metadata is in [CITATION.cff](CITATION.cff).
+
+```bibtex
+@software{madduri_gpu_mcp_server,
+  author    = {Madduri, Pavan},
+  title     = {gpu-mcp-server: NVIDIA GPU metrics for AI agents over the Model Context Protocol},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.22866670},
+  url       = {https://doi.org/10.5281/zenodo.22866670}
+}
+```
+
 ## Roadmap
 
 See [ROADMAP.md](ROADMAP.md) for the 12-month public roadmap.
