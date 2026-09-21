@@ -1,0 +1,163 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{fancyvrb}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\title{gpu-mcp-server: Exposing GPU Telemetry to AI Agents\\
+via the Model Context Protocol}
+
+\author{Pavan Madduri\\
+Independent Researcher\\
+\texttt{https://orcid.org/0009-0007-3795-7593}}
+
+\date{September 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Large language model (LLM) agents are increasingly used to observe and operate
+computing infrastructure, yet they have no standard, structured way to see the
+state of the GPUs that dominate the cost and capacity of machine learning
+systems. In practice an agent must invoke command-line tools such as
+\texttt{nvidia-smi} and parse free-form text, which is brittle, inconsistent
+across driver versions, and awkward to expose safely. We present
+\texttt{gpu-mcp-server}, an open-source server that exposes NVIDIA GPU telemetry
+to AI agents through the Model Context Protocol (MCP), an open standard for
+connecting LLM applications to external tools. The server reads metrics directly
+from the NVIDIA Management Library (NVML) and presents them as typed MCP tools
+covering per-device utilization, memory, temperature, power, per-process usage,
+and Multi-Instance GPU (MIG) partitions. It runs over stdio or streamable HTTP,
+ships a container image and a Kubernetes deployment, and can be tested without a
+physical GPU through a mock collector. By making GPU state a first-class,
+structured tool rather than scraped command output, the server lets any
+MCP-compatible agent reason about accelerator capacity, cost, and placement.
+\end{abstract}
+
+\section{Introduction}
+
+GPUs are the scarce and expensive resource in modern machine learning
+infrastructure, so accurate, real-time visibility into their utilization and
+memory is essential for any system that reasons about capacity or cost. At the
+same time, LLM-based agents are increasingly asked to monitor and operate
+infrastructure. These two trends collide at a gap: agents have no standard way to
+observe GPU state. The usual workaround---shelling out to \texttt{nvidia-smi} and
+parsing its text output---is fragile across driver versions, hard to consume
+programmatically, and difficult to expose to an agent with clear boundaries.
+
+The Model Context Protocol (MCP) \cite{mcp} is an open protocol that standardizes
+how LLM applications discover and call external tools through typed interfaces.
+We use MCP to close the gap for GPUs. \texttt{gpu-mcp-server} \cite{gms}
+implements the protocol and provides GPU telemetry as a small set of tools backed
+by the NVIDIA Management Library (NVML) \cite{nvml}. Because it reads NVML rather
+than scraping command output, the data is structured and stable, and any
+MCP-compatible agent can query it without hardware-specific glue code.
+
+\section{Background}
+
+\paragraph{Model Context Protocol.} MCP defines a client--server protocol in
+which a host application (for example, an assistant embedded in an editor or an
+agent runtime) connects to servers that expose \emph{tools} with typed inputs and
+outputs. This lets model-driven applications call capabilities in a uniform way
+rather than through ad-hoc integrations.
+
+\paragraph{NVIDIA Management Library.} NVML is the vendor library for querying and
+managing NVIDIA GPU state, including utilization, memory, temperature, power, and
+partition (MIG) information. \texttt{gpu-mcp-server} uses the official Go bindings
+\cite{gonvml}, which load the library at runtime.
+
+\section{Design}
+
+\subsection{Tools}
+The server registers a small set of MCP tools, summarized in
+Table~\ref{tab:tools}. Each has a typed schema so agents receive structured
+results rather than free-form text.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{L{0.30\textwidth} L{0.60\textwidth}}
+\toprule
+\textbf{Tool} & \textbf{Purpose} \\
+\midrule
+\texttt{list\_gpus} & Enumerate all GPUs with utilization and memory. \\
+\texttt{get\_gpu\_metrics} & Detailed metrics for a specific GPU or MIG instance. \\
+\texttt{gpu\_summary} & Aggregate statistics across all devices. \\
+\texttt{get\_gpu\_processes} & Per-process (PID-level) GPU usage where supported. \\
+\bottomrule
+\end{tabular}
+\caption{MCP tools exposed by the server.}
+\label{tab:tools}
+\end{table}
+
+\subsection{Transports}
+The server supports two transports: stdio, for local agent runtimes that launch
+the server as a subprocess, and streamable HTTP, for networked or containerized
+deployments. The same tool implementations serve both.
+
+\subsection{Deployment}
+The server is distributed as a container image and includes a Helm chart for
+deployment on Kubernetes as a DaemonSet, so a cluster can expose per-node GPU
+telemetry to agents. It also reports a build version for reproducibility.
+
+\subsection{Testing without hardware}
+Hardware access is abstracted behind a collector interface. A mock collector with
+static device data lets the tool handlers be exercised on machines without a GPU,
+so the server can be built and tested in ordinary CI.
+
+\section{Use Cases}
+
+Exposing GPU telemetry as MCP tools enables agent-driven workflows that are
+otherwise awkward: an assistant can answer questions about live fleet
+utilization, an operations agent can decide whether a node has spare capacity
+before scheduling a job, and a cost-oriented agent can flag idle but allocated
+GPUs. Because the server reads NVML directly, the same telemetry foundation
+underlies the author's related Kubernetes GPU autoscaler \cite{kgs}, keeping
+metric semantics consistent between agent-facing observability and
+orchestrator-facing autoscaling.
+
+\section{Related Work}
+
+NVIDIA's \texttt{nvidia-smi} and DCGM expose GPU metrics, but as command-line
+output or Prometheus time series rather than as agent-callable tools. General MCP
+servers exist for many services, but not for direct GPU telemetry via NVML.
+\texttt{gpu-mcp-server} is complementary to monitoring stacks: it does not replace
+dashboards, but makes GPU state directly consumable by LLM agents through a
+standard protocol.
+
+\section{Conclusion}
+
+AI agents increasingly operate infrastructure, but lacked a structured way to see
+GPU state. By exposing NVML-backed telemetry as typed MCP tools over stdio and
+HTTP, \texttt{gpu-mcp-server} gives agents reliable, real-time GPU visibility
+without hardware-specific glue. The software is open source and available at
+\cite{gms}.
+
+\begin{thebibliography}{99}
+
+\bibitem{mcp} Model Context Protocol. \url{https://modelcontextprotocol.io}
+
+\bibitem{gms} P. Madduri. gpu-mcp-server: NVIDIA GPU metrics for AI agents over
+the Model Context Protocol. Zenodo, 2026.
+\url{https://doi.org/10.5281/zenodo.22866670}
+
+\bibitem{nvml} NVIDIA Corporation. NVIDIA Management Library (NVML).
+\url{https://developer.nvidia.com/management-library-nvml}
+
+\bibitem{gonvml} NVIDIA Corporation. go-nvml: NVML bindings for Go.
+\url{https://github.com/NVIDIA/go-nvml}
+
+\bibitem{kgs} P. Madduri. keda-gpu-scaler: GPU-aware autoscaling for Kubernetes
+from real hardware metrics. Zenodo, 2026.
+\url{https://doi.org/10.5281/zenodo.22866676}
+
+\end{thebibliography}
+
+\end{document}
