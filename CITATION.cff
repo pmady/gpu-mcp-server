@@ -4,6 +4,7 @@ title: "gpu-mcp-server: NVIDIA GPU metrics for AI agents over the Model Context 
 authors:
   - family-names: "Madduri"
     given-names: "Pavan"
+    orcid: "https://orcid.org/0009-0007-3795-7593"
 type: software
 version: 0.2.0
 date-released: 2026-09-20
