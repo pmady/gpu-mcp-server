@@ -5,6 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/pmady/gpu-mcp-server)](https://goreportcard.com/report/github.com/pmady/gpu-mcp-server)
 [![Go Reference](https://pkg.go.dev/badge/github.com/pmady/gpu-mcp-server.svg)](https://pkg.go.dev/github.com/pmady/gpu-mcp-server)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22866670.svg)](https://doi.org/10.5281/zenodo.22866670)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/pmady/gpu-mcp-server/badge)](https://securityscorecards.dev/viewer/?uri=github.com/pmady/gpu-mcp-server)
 [![OpenSSF Best Practices](https://img.shields.io/badge/OpenSSF_Best_Practices-in_progress-yellow)](https://www.bestpractices.dev/en)
 
