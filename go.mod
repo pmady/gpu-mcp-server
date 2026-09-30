@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/NVIDIA/go-nvml v0.13.3-1
-	github.com/modelcontextprotocol/go-sdk v1.7.0
+	github.com/modelcontextprotocol/go-sdk v1.8.0
 )
 
 require (
